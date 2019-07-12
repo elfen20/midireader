@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Cave.IO, Version=1.0.6.0, Culture=neutral, PublicKeyToken=9c6246ce3e4f0673, processorArchitecture=MSIL">
+      <HintPath>..\packages\Cave.IO.1.0.6\lib\net45\Cave.IO.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,8 +45,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MIDIChunk.cs" />
+    <Compile Include="MIDIChunkType.cs" />
+    <Compile Include="MIDIFile.cs" />
+    <Compile Include="MIDIFileFormat.cs" />
+    <Compile Include="MIDIHeader.cs" />
     <Compile Include="MIDIReader.cs" />
+    <Compile Include="MIDITrack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
