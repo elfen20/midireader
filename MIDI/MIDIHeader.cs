@@ -1,15 +1,10 @@
 ﻿namespace MIDI
 {
-    public class MIDIHeader
+    public struct MIDIHeader
     {
-        MIDIChunk chunk;
+        public MIDIFileType FileType;
+        public int TrackCount;
+        public int Division;
 
-        public readonly MIDIFileFormat Format;
-        public readonly int TrackCount;
-
-        public MIDIHeader(MIDIChunk chunk)
-        {
-
-        }
     }
 }

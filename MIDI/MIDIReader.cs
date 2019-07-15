@@ -8,14 +8,6 @@ namespace MIDI
 {
     public class MIDIReader
     {
-        public static List<MIDIChunk> ReadAllChunks(string fileName)
-        {
-            using (FileStream stream = File.OpenRead(fileName))
-            {
-                return ReadAllChunks(stream);
-            }
-        }
-
         public static MIDIFile ReadFile(string fileName)
         {
             using (FileStream stream = File.OpenRead(fileName))
@@ -24,51 +16,116 @@ namespace MIDI
             }
         }
 
-
-        public static List<MIDIChunk> ReadAllChunks(Stream stream)
-        {
-            var reader = new MIDIReader(stream);
-            var chunks = new List<MIDIChunk>();
-
-            while (true)
-            {
-                MIDIChunk chunk;
-                if (reader.GetNextChunk(out chunk))
-                {
-                    chunks.Add(chunk);
-                }
-                else
-                { break; }
-            }
-
-            return chunks;
-        }
-
         public static MIDIFile ReadFile(Stream stream)
         {
-            var chunks = ReadAllChunks(stream);
 
-            return new MIDIFile(chunks);
+            var reader = new MIDIReader(stream);
+            var midifile = reader.ReadMidiFile();
+            reader.Close();
+            return midifile;
         }
 
-        bool GetNextChunk(out MIDIChunk chunk)
+        MIDIFile ReadMidiFile()
         {
-            chunk = default(MIDIChunk);
-            if (dReader.Available > 8)
-            {
-                chunk.Type = ParseType(dReader.ReadBytes(4));
-                chunk.Length = dReader.ReadInt32();
-                if (dReader.Available >= chunk.Length)
-                {
-                    chunk.Data = dReader.ReadBytes(chunk.Length);
-                    return true;
-                }
-            }
+            var header = ReadHeader();
+            var tracks = ReadAllTracks();
 
-
-            return false;
+            return new MIDIFile(header, tracks);
         }
 
+        MIDIHeader ReadHeader()
+        {
+            var header = default(MIDIHeader);
+            if (dReader.Available < 14)
+            {
+                throw new EndOfStreamException("could not read header!");
+            }
+            var chunktype = dReader.ReadString(4);
+            if (chunktype != "MThd") throw new InvalidDataException("Invalid chunktype in place of header found!");
+            int length = dReader.ReadInt32();
+            header.FileType = ParseFileType(dReader.ReadInt16());
+            header.TrackCount = dReader.ReadInt16();
+            header.Division = dReader.ReadInt16();
+            if (length > 6)
+            {
+                dReader.Skip(length - 6);
+            }
+            return header;
+        }
+
+        MIDIFileType ParseFileType(int type)
+        {
+            if ((type > -1) && (type < 3)) 
+            {
+                return (MIDIFileType)type;
+            }
+            return MIDIFileType.Unknown;
+        }
+
+        List<MIDITrack> ReadAllTracks()
+        {
+            List<MIDITrack> tracks = new List<MIDITrack>();
+            while (dReader.Available > 8)
+            {
+                MIDITrack track = GetNextTrack();
+                tracks.Add(track);
+            }
+            return tracks;
+        }
+
+        MIDITrack GetNextTrack()
+        {
+            var events = new List<IMIDIEvent>();
+            if (dReader.Available < 8)
+            {
+                throw new EndOfStreamException("could not read track!");
+            }
+            var chunktype = dReader.ReadString(4);
+            if (chunktype != "MTrk") throw new InvalidDataException("Invalid chunktype found!");
+            int length = dReader.ReadInt32();
+            long endPos = dReader.BaseStream.Position + length;
+            runningStatus = false;
+            lastEvent = null;
+            while (dReader.BaseStream.Position < endPos)
+            {
+                //IMIDIEvent midiEvent = GetNextEvent();
+                //events.Add(midiEvent);
+            }
+                               
+            return new MIDITrack(events); ;
+        }
+
+
+        IMIDIEvent GetNextEvent()
+        {
+            uint delta = dReader.Read7BitEncodedUInt32();
+            byte type = dReader.ReadByte();
+            if (type < 0x80)
+            {
+                // data byte found
+                if (runningStatus && lastEvent != null)
+                {
+                    // if running status the read type byte is actually the first databyte
+                    if (lastEvent.Type == MIDIEventType.ProgramChange || lastEvent.Type == MIDIEventType.KeyPressure )
+                    {
+                        return new MIDIChannelEvent(delta, lastEvent.RawType, type, 0);
+                    }
+                    else
+                    {
+                        byte secondData = dReader.ReadByte();
+                        return new MIDIChannelEvent(delta, lastEvent.RawType, type, secondData);
+                    }
+                }
+                throw new InvalidDataException("data byte found but running status not set");
+            }
+            else
+            {
+
+            }
+        }
+
+
+        /*
         MIDIChunkType ParseType(byte[] type)
         {
             switch (Encoding.ASCII.GetString(type))
@@ -82,6 +139,7 @@ namespace MIDI
             }
             
         }
+        */
 
         void Close()
         {
@@ -89,11 +147,12 @@ namespace MIDI
         }
 
         DataReader dReader;
+        bool runningStatus = false;
+        MIDIChannelEvent lastEvent;
 
         public MIDIReader(Stream stream)
         {
-            dReader = new DataReader(stream,Cave.IO.StringEncoding.ASCII,NewLineMode.CRLF,EndianType.BigEndian);
-            
+            dReader = new DataReader(stream,Cave.IO.StringEncoding.ASCII,NewLineMode.CRLF,EndianType.BigEndian);            
         }
 
     }

@@ -12,12 +12,12 @@ namespace NoteConverter
         static void Main(string[] args)
         {
             Console.WriteLine("Reading MIDI File...");
-            var r = MIDIReader.ReadAllChunks("test.mid");
-            Console.WriteLine($"found {r.Count} Chunk(s)...");
+            var r = MIDIReader.ReadFile("test.mid");
+            Console.WriteLine($"found {r.Tracks.Count} Tracks(s)...");
             int i = 1;
-            foreach (MIDIChunk chunk in r)
+            foreach (MIDITrack track in r)
             {
-                Console.WriteLine($"Nr. {i}: {chunk.ToString()}");
+                Console.WriteLine($"Nr. {i}: {track.ToString()}");
                 i++;
             }
         }

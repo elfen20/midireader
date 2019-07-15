@@ -1,6 +1,6 @@
 ﻿namespace MIDI
 {
-    public enum MIDIFileFormat
+    public enum MIDIFileType
     {
         Unknown = -1,
         SingleTrack = 0,

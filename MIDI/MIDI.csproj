@@ -44,10 +44,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IMIDIEvent.cs" />
+    <Compile Include="IMIDITrack.cs" />
     <Compile Include="MIDIChunk.cs" />
     <Compile Include="MIDIChunkType.cs" />
+    <Compile Include="MIDIEvent.cs" />
+    <Compile Include="MIDIChannelEvent.cs" />
+    <Compile Include="MIDIGenericEvent.cs" />
+    <Compile Include="MIDIEventType.cs" />
     <Compile Include="MIDIFile.cs" />
-    <Compile Include="MIDIFileFormat.cs" />
+    <Compile Include="MIDIFileType.cs" />
     <Compile Include="MIDIHeader.cs" />
     <Compile Include="MIDIReader.cs" />
     <Compile Include="MIDITrack.cs" />

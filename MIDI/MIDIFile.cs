@@ -8,12 +8,13 @@ namespace MIDI
 {
     public class MIDIFile
     {
-        public readonly MIDIHeader Header;
-        public readonly List<MIDITrack> Tracks;
+        public MIDIHeader Header { get; private set; }
+        public List<MIDITrack> Tracks { get; private set}
 
-        public MIDIFile(List<MIDIChunk> chunks)
+        public MIDIFile(MIDIHeader header, List<MIDITrack> tracks)
         {
-
+            Header = header;
+            Tracks = tracks;
         }
     }
 }
