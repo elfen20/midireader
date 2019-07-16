@@ -9,6 +9,7 @@ namespace MIDI
     public interface IMIDIEvent
     {
         int Delta { get; }
-        byte RawType { get; }        
+        byte RawType { get; }
+        MIDIEventType Type { get; }
     }
 }

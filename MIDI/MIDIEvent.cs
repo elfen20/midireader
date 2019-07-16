@@ -21,11 +21,11 @@ namespace MIDI
             Type = GetEventType(type);
         }
 
-        static MIDIEventType GetEventType(byte rawType)
+        public static MIDIEventType GetEventType(byte rawType)
         {
-            if (rawType > 0x80)
+            if (rawType >= 0x80)
             {
-                return (MIDIEventType)(rawType >> 8);
+                return (MIDIEventType)(rawType >> 4);
             }
             return MIDIEventType.Unknown;
         }

@@ -55,6 +55,7 @@
     <Compile Include="MIDIFile.cs" />
     <Compile Include="MIDIFileType.cs" />
     <Compile Include="MIDIHeader.cs" />
+    <Compile Include="MIDIMetaEvent.cs" />
     <Compile Include="MIDIReader.cs" />
     <Compile Include="MIDITrack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

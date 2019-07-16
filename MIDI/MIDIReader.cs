@@ -64,7 +64,7 @@ namespace MIDI
 
         List<MIDITrack> ReadAllTracks()
         {
-            List<MIDITrack> tracks = new List<MIDITrack>();
+            var tracks = new List<MIDITrack>();
             while (dReader.Available > 8)
             {
                 MIDITrack track = GetNextTrack();
@@ -88,8 +88,8 @@ namespace MIDI
             lastEvent = null;
             while (dReader.BaseStream.Position < endPos)
             {
-                //IMIDIEvent midiEvent = GetNextEvent();
-                //events.Add(midiEvent);
+                IMIDIEvent midiEvent = GetNextEvent();
+                events.Add(midiEvent);
             }
                                
             return new MIDITrack(events); ;
@@ -98,7 +98,7 @@ namespace MIDI
 
         IMIDIEvent GetNextEvent()
         {
-            uint delta = dReader.Read7BitEncodedUInt32();
+            int delta = dReader.Read7BitEncodedInt32();
             byte type = dReader.ReadByte();
             if (type < 0x80)
             {
@@ -120,26 +120,45 @@ namespace MIDI
             }
             else
             {
+                MIDIEventType eType = MIDIEvent.GetEventType(type);
+                byte data1, data2;
+                switch (eType)
+                {
+                    case MIDIEventType.ProgramChange:
+                    case MIDIEventType.KeyPressure:
+                        data1 = dReader.ReadByte();
+                        lastEvent = new MIDIChannelEvent(delta, type, data1, 0);
+                        break;
+                    case MIDIEventType.NoteOff:
+                    case MIDIEventType.NoteOn:
+                    case MIDIEventType.PolyphonicKeyPressure:
+                    case MIDIEventType.ControllerChange:
+                    case MIDIEventType.ChannelPitchBend:
+                        data1 = dReader.ReadByte();
+                        data2 = dReader.ReadByte();
+                        lastEvent = new MIDIChannelEvent(delta, type, data1, data2);
+                        break;
+                    case MIDIEventType.Meta:
+                        data1 = dReader.ReadByte();
+                        int length = dReader.Read7BitEncodedInt32();
+                        byte[] buffer = dReader.ReadBytes(length);
+                        lastEvent = new MIDIMetaEvent(delta, type, data1, buffer);
+                        break;
+                    default:
+                        throw new NotImplementedException("unknown MIDI Event found !");
+                }
 
+                if (type >= 0xF0 && runningStatus)
+                {
+                    runningStatus = false;
+                }
+                else
+                {
+                    runningStatus = true;
+                }
+                return lastEvent;
             }
         }
-
-
-        /*
-        MIDIChunkType ParseType(byte[] type)
-        {
-            switch (Encoding.ASCII.GetString(type))
-            {
-                case "MThd":
-                    return MIDIChunkType.Header;
-                case "MTrk":
-                    return MIDIChunkType.Track;
-                default:
-                    return MIDIChunkType.Unknown;
-            }
-            
-        }
-        */
 
         void Close()
         {
@@ -148,7 +167,7 @@ namespace MIDI
 
         DataReader dReader;
         bool runningStatus = false;
-        MIDIChannelEvent lastEvent;
+        IMIDIEvent lastEvent;
 
         public MIDIReader(Stream stream)
         {
